@@ -12,6 +12,36 @@
 #define BLUE_FRONT(string) "\x1b[0;34m" string DEFAULT
 #define GRAY_BG "\x1b[48;5;253m"
 
+int parseHunkHeader(char* string, int *hunk_h) {
+	int res;
+	res =	sscanf(string,
+			"@@ -%d,%d +%d,%d",
+			hunk_h, (hunk_h+1), (hunk_h+2), (hunk_h+3));
+	return res == 4;
+}
+
+int itoa(int i, char **string_buffer){
+	if (string_buffer == NULL)
+		return 0;
+	int i_length = snprintf(NULL, 0, "%d", i);
+	int s_lentgh = i_length + 1;
+	*string_buffer = malloc(s_lentgh);
+	if (*string_buffer == NULL)
+		return 0;
+	sprintf(*string_buffer, "%d", i);
+	return 1;
+}
+
+void print_block(char *string, int *hunk_header){
+	if(*string == '-') {
+		fputs(RED_BG, stdout);
+		printf("%d   %s%s\n", hunk_header[0]++, string, DEFAULT);
+	} else {
+		fputs(GREEN_BG, stdout);
+		printf("   %d%s%s\n", hunk_header[2]++, string, DEFAULT);
+	}
+}
+
 int findNthOccur(char* string, int* res, char c, int n_occur) {
 	int occur = 0;
 	for (int i = 0; i < strlen(string); i++) {
@@ -24,6 +54,10 @@ int findNthOccur(char* string, int* res, char c, int n_occur) {
 		}
 	}
 	return 0;
+}
+
+void handle_print(char* str, char first){
+
 }
 
 int main(int argc, char **argv)
@@ -45,17 +79,21 @@ int main(int argc, char **argv)
 		size_t n_read = 0;
 		int occur;
 		char first;
+		int hunk_header[4];
+		char *str_buffer = NULL;
 		while((n_read = getline(&line, &len, in)) != -1){
 			first = n_read > 0 ? line[0] : '\0';
 			if ((first == '+') || (first == '-')){
 				*strchr(line, '\n') = '\0';
-				printf("%s%s%s\n", first == '+' ? GREEN_BG : RED_BG , line, DEFAULT);
+				print_block(line, hunk_header);
 			} else if (first == '@' && findNthOccur(line, &occur, '@', 4)) {
 				fputs("\x1b[0;34m", stdout);
+				parseHunkHeader(line, hunk_header);
 				fwrite(&line[occur+2], 1, strlen(line) - occur - 2, stdout);
 				fputs("\x1b[0m", stdout);
 			} else {
-				printf("%s", line);
+				printf("%d %d %s", 
+				hunk_header[0]++, hunk_header[2]++, line);
 			}
 		}
 		// fputs(DEFAULT, stdout);
