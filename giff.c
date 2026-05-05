@@ -32,12 +32,23 @@ int itoa(int i, char **string_buffer){
 	return 1;
 }
 
+// TODO (tayheau): count number of ins/del per file
+void handleFileHeader(char *string){
+	char *fileName;
+	if (*string == '-'){
+		sscanf(string, "--- a/%s", fileName);
+		printf("%s\n", fileName);
+	}
+}
+
 void print_block(char *string, int *hunk_header){
 	if(*string == '-') {
 		fputs(RED_BG, stdout);
+		fputs("\x1b[K", stdout);
 		printf("%d   %s%s\n", hunk_header[0]++, string, DEFAULT);
 	} else {
 		fputs(GREEN_BG, stdout);
+		fputs("\x1b[K", stdout);
 		printf("   %d%s%s\n", hunk_header[2]++, string, DEFAULT);
 	}
 }
@@ -57,6 +68,9 @@ int findNthOccur(char* string, int* res, char c, int n_occur) {
 }
 
 void handle_print(char* str, char first){
+	if (*str == '-') {
+		
+	}
 
 }
 
@@ -79,8 +93,9 @@ int main(int argc, char **argv)
 		size_t n_read = 0;
 		int occur;
 		char first;
-		int hunk_header[4];
-		char *str_buffer = NULL;
+// TODO (tayheau): go to a len 2 hunk header 
+// TODO (tayheau): rotate to a stack logic
+		int hunk_header[4] = {-1};
 		while((n_read = getline(&line, &len, in)) != -1){
 			first = n_read > 0 ? line[0] : '\0';
 			if ((first == '+') || (first == '-')){
@@ -92,8 +107,11 @@ int main(int argc, char **argv)
 				fwrite(&line[occur+2], 1, strlen(line) - occur - 2, stdout);
 				fputs("\x1b[0m", stdout);
 			} else {
-				printf("%d %d %s", 
-				hunk_header[0]++, hunk_header[2]++, line);
+				if (hunk_header[0] != -1) {
+					printf("%d %d %s", hunk_header[0]++, hunk_header[2]++, line);
+				} else {
+					printf("      %s", line);
+				}
 			}
 		}
 		// fputs(DEFAULT, stdout);
