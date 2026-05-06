@@ -45,11 +45,11 @@ void print_block(char *string, int *hunk_header){
 	if(*string == '-') {
 		fputs(RED_BG, stdout);
 		fputs("\x1b[K", stdout);
-		printf("%d   │%s%s\n", hunk_header[0]++, string, DEFAULT);
+		printf("%3d %3c│%s%s\n", hunk_header[0]++, ' ', string, DEFAULT);
 	} else {
 		fputs(GREEN_BG, stdout);
 		fputs("\x1b[K", stdout);
-		printf("   %d│%s%s\n", hunk_header[2]++, string, DEFAULT);
+		printf("%3c %3d│%s%s\n",' ', hunk_header[2]++, string, DEFAULT);
 	}
 }
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 				fputs("\x1b[0m", stdout);
 			} else {
 				if (hunk_header[0] != -1) {
-					printf("%d %d│ %s", hunk_header[0]++, hunk_header[2]++, line);
+					printf("%3d %3d│ %s", hunk_header[0]++, hunk_header[2]++, line);
 				} else {
 					printf("      %s", line);
 				}
