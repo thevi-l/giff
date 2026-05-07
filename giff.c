@@ -5,12 +5,15 @@
 #include <stdlib.h>
 
 #define DEFAULT "\x1b[0m"
-#define RED_BG "\x1b[48;2;59;11;0m"
+#define RED_BG "\x1b[48;2;95;0;0m"
 #define RED_HL "\x1b[48;2;178;38;0m"
 #define GREEN_HL "\x1b[48;2;25;148;0m"
-#define GREEN_BG "\x1b[48;2;10;59;0m"
+#define GREEN_BG "\x1b[48;2;0;95;0m"
+#define GREEN_HUNK_BG "\x1b[48;2;0;75;0m"
 #define BLUE_FRONT(string) "\x1b[0;34m" string DEFAULT
 #define GRAY_BG "\x1b[48;5;253m"
+#define GRAY_FRONT "\x1b[38;2;108;108;108m"
+#define WHITE_FRONT "\x1b[38;2;250;250;250m"
 
 int parseHunkHeader(char* string, int *hunk_h) {
 	int res;
@@ -32,6 +35,10 @@ int itoa(int i, char **string_buffer){
 	return 1;
 }
 
+void printLineCount(int *hunk_header, char *bg){
+	
+}
+
 // TODO (tayheau): count number of ins/del per file
 void handleFileHeader(char *string){
 	char *fileName;
@@ -45,11 +52,17 @@ void print_block(char *string, int *hunk_header){
 	if(*string == '-') {
 		fputs(RED_BG, stdout);
 		fputs("\x1b[K", stdout);
-		printf("%3d %3c│%s%s\n", hunk_header[0]++, ' ', string, DEFAULT);
+		fputs(GRAY_FRONT, stdout);
+		printf("%3d %3c│", hunk_header[0]++, ' ');
+		fputs(WHITE_FRONT, stdout);
+		printf("%s%s\n", string, DEFAULT);
 	} else {
 		fputs(GREEN_BG, stdout);
 		fputs("\x1b[K", stdout);
-		printf("%3c %3d│%s%s\n",' ', hunk_header[2]++, string, DEFAULT);
+		fputs(GRAY_FRONT, stdout);
+		printf("%3c %3d│", ' ', hunk_header[2]++);
+		fputs(WHITE_FRONT, stdout);
+		printf("%s%s\n", string, DEFAULT);
 	}
 }
 
@@ -108,8 +121,12 @@ int main(int argc, char **argv)
 				fputs("\x1b[0m", stdout);
 			} else {
 				if (hunk_header[0] != -1) {
-					printf("%3d %3d│ %s", hunk_header[0]++, hunk_header[2]++, line);
+					fputs(GRAY_FRONT, stdout);
+					printf("%3d %3d│", hunk_header[0]++, hunk_header[2]++);
+					fputs(WHITE_FRONT, stdout);
+					printf("%s%s", line, DEFAULT);
 				} else {
+					// TODO (tayheau): better handle file header than this
 					printf("      %s", line);
 				}
 			}
