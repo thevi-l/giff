@@ -1,17 +1,17 @@
 CC=gcc
 CFLAGS=-Wall -std=c99 -pedantic
 LDFLAGS=
-EXEC=giff
-SRC= $(wildcard *.c)
+EXEC=giff_dev
+SRC= newgiff.c strbuf.c
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
-	@git diff | ./giff
+	@git diff | ./giff_dev
 
 debug: CFLAGS+=-g
 debug: $(EXEC)
 
-giff: $(OBJ)
+$(EXEC): $(OBJ)
 	@$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
