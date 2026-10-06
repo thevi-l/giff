@@ -14,6 +14,9 @@ void strbuf_release(strbuf *sb);
 void strbuf_reset(strbuf *sb);
 void strbuf_grow(strbuf *sb, size_t extra);
 
+void strbuf_insert(strbuf *sb, size_t pos, const void *data, size_t len);
+void strbuf_splice(strbuf *sb, size_t pos, size_t len, const void *data, size_t dlen);
+
 static inline void strbuf_swap(strbuf *a, strbuf *b) {
     strbuf tmp = *a;
     *a = *b;
@@ -23,6 +26,8 @@ static inline void strbuf_swap(strbuf *a, strbuf *b) {
 static inline size_t strbuf_avail(const strbuf *sb) {
     return sb->alloc ? sb->alloc - sb->len - 1 : 0;
 }
+
+void strbuf_trim_trailing_newline(strbuf *sb);
 
 static inline void strbuf_setlen(strbuf *sb, size_t len) {
     sb->len = len;

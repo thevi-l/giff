@@ -69,6 +69,30 @@ int strbuf_getline(strbuf *sb, FILE *fp) {
     return 0;
 }
 
+void strbuf_splice(strbuf *sb, size_t pos, size_t len, const void *data, size_t dlen) {
+	// if (unsigned_add_overflows(pos, len))
+	// 	die("you want to use way too much memory");
+	// if (pos > sb->len)
+	// 	die("`pos' is too far after the end of the buffer");
+	// if (pos + len > sb->len)
+	// 	die("`pos + len' is too far after the end of the buffer");
+	if (dlen >= len) strbuf_grow(sb, dlen - len);
+	memmove(sb->buf + pos + dlen, sb->buf + pos + len, sb->len - pos - len);
+	memcpy(sb->buf + pos, data, dlen);
+	sb->len = sb->len + dlen - len;
+}
+
+void strbuf_insert(strbuf *sb, size_t pos, const void *data, size_t len) {
+	strbuf_splice(sb, pos, 0, data, len);
+}
+
+void strbuf_trim_trailing_newline(strbuf *sb) {
+	if(sb->len>0 && sb->buf[sb->len-1] == '\n'){
+		if(--sb->len>0 && sb->buf[sb->len-1] == '\r') --sb->len;
+		sb->buf[sb->len]='\0';
+	}
+}
+
 void strbuf_detab(strbuf *sb, int tab_width) {
     if (!sb || tab_width <= 0) return;
 

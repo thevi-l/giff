@@ -1,7 +1,6 @@
 #pragma once
 #include <stddef.h>
-#include <stdint.h>
-typedef uint8_t b8;
+#include "types.h"
 
 typedef struct {size_t alloc; size_t len; char **buf;} strlist;
 #define STRLIST_INIT { .buf=NULL }
@@ -9,5 +8,5 @@ typedef struct {size_t alloc; size_t len; char **buf;} strlist;
 void strlist_init(strlist *sl);
 void strlist_release(strlist *sl);
 void strlist_clear(strlist *sl);
-static b8 strlist_alloc(strlist *sl, size_t len);
+b8 strlist_alloc(strlist *sl, size_t len);
 b8 strlist_append(strlist *sl, const char *str);

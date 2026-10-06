@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-Wall -std=c99 -pedantic
+CFLAGS=-Wall -std=c99 
 LDFLAGS=
-EXEC=giff_dev
-SRC= newgiff.c strbuf.c
+EXEC=giff
+SRC= newgiff.c strbuf.c strlist.c
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
