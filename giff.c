@@ -16,6 +16,7 @@
 #define RED_BG      "\x1b[48;2;95;0;0m"
 #define RED_HL      "\x1b[48;2;178;38;0m"
 #define GREEN_HL    "\x1b[48;2;25;148;0m"
+#define BLUE_BG 		"\x1b[44m"
 #define GREEN_BG    "\x1b[48;2;0;60;0m"
 #define GRAY_FRONT  "\x1b[38;2;108;108;108m"
 #define BLUE_FRONT  "\x1b[0;34m"
@@ -35,10 +36,15 @@ int getTermWidth() {
 	return width;
 }
 
-b8 parseHunkHeader(const char* string, int *lc_old, int *lc_new) {
+b8 parseHunkHeader(const char *string, int *lc_old, int *lc_new) {
     int res = sscanf(string, "@@ -%d,%*d +%d,%*d", lc_old, lc_new);
     return res == 2;
 }
+
+// const char *skipPrefix(const char *string, const char *prefix) {
+// 	while(*prefix) if(*string++ != *prefix++) return NULL;
+// 	return string;
+// }
 
 void printHunkHeader(const strbuf *sb){
 	strbuf out; strbuf_init(&out,0);
@@ -90,23 +96,29 @@ int main(void) {
 					strlist_append(&rm, linebuf.buf);
         } 
         else {
-					flushHunk(&add, &rm, &lc_old, &lc_new);
+					if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new);
+					if (starts_with(linebuf.buf, "diff")){
+						if(lc_old!=-1){
+							printEndHunk(); lc_old = -1;
+						}
+						printf(BLUE_BG"%-*s"DEFAULT,getTermWidth(), linebuf.buf);
+					}
 					if (starts_with(linebuf.buf, "@@ -")) {
-							if(lc_old!=-1) printEndHunk();
+							if(lc_old!=-1){
+								printEndHunk(); lc_old = -1;
+							}
 							parseHunkHeader(linebuf.buf, &lc_old, &lc_new);
 							printHunkHeader(&linebuf);
 							continue;
 					}
-					if (linebuf.buf[0] == ' ') {
+					else if (linebuf.buf[0] == ' ') {
 							printf(GRAY_FRONT "│%3d %3d|"DEFAULT " %-*s" GRAY_FRONT"│"DEFAULT"\n",
 									lc_old++, lc_new++, (getTermWidth()-11), linebuf.buf + 1);
-					} else {
-							// printf(BLUE_FRONT "%s\n", linebuf.buf);
-					}
+					} 
         }
-    }
-		flushHunk(&add, &rm, &lc_old, &lc_new);
-		printEndHunk();
+	}
+		if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new);
+		if(lc_old!=-1)printEndHunk();
     strbuf_release(&linebuf);
 		strlist_clear(&add); strlist_clear(&rm);
     return 0;

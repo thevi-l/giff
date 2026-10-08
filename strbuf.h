@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "types.h"
 
 typedef struct { size_t alloc; size_t len; char *buf; } strbuf;
 
@@ -49,3 +50,5 @@ int strbuf_getline(strbuf *sb, FILE *fp);
 void strbuf_detab(strbuf *sb, int tab_width);
 
 bool starts_with(const char *str, const char *prefix);
+
+
