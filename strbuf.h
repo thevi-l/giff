@@ -51,4 +51,4 @@ void strbuf_detab(strbuf *sb, int tab_width);
 
 bool starts_with(const char *str, const char *prefix);
 
-
+void strbuf_strip_ansi(strbuf *sb);

@@ -88,6 +88,7 @@ int main(void) {
     while (strbuf_getline(&linebuf, stdin) != EOF) {
         strbuf_detab(&linebuf, 4);
 				strbuf_trim_trailing_newline(&linebuf);
+				strbuf_strip_ansi(&linebuf);
         if (IS_DIFF_LINE(linebuf.buf, '+')) {
 					strlist_append(&add, linebuf.buf);
         }

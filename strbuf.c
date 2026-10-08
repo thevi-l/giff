@@ -116,3 +116,45 @@ bool starts_with(const char *str, const char *prefix) {
     }
     return true;
 }
+
+typedef enum {
+    ANSI_STATE_NORMAL,
+    ANSI_STATE_ESCAPE,
+    ANSI_STATE_CSI,
+    ANSI_STATE_OSC,
+    ANSI_STATE_OSC_STR,
+} AnsiState;
+
+void strbuf_strip_ansi(strbuf *sb) {
+    AnsiState state = ANSI_STATE_NORMAL;
+    char *r_ptr = sb->buf, *w_ptr = sb->buf, *end = sb->buf + sb->len;
+    while (r_ptr < end) {
+        switch (state) {
+            case ANSI_STATE_NORMAL:
+                if (*r_ptr == '\x1b') state = ANSI_STATE_ESCAPE;
+                else *w_ptr++ = *r_ptr;
+                break;
+            case ANSI_STATE_ESCAPE:
+                if (*r_ptr == '[') state = ANSI_STATE_CSI;
+                else if (*r_ptr == ']') state = ANSI_STATE_OSC;
+                else { *w_ptr++ = '\x1b'; *w_ptr++ = *r_ptr; state = ANSI_STATE_NORMAL; }
+                break;
+            case ANSI_STATE_CSI:
+                if (*r_ptr >= '@' && *r_ptr <= '~') state = ANSI_STATE_NORMAL;
+                break;
+            case ANSI_STATE_OSC:
+                if (*r_ptr == '\x1b' && r_ptr < end && *r_ptr == '\\') {
+									state = ANSI_STATE_NORMAL; r_ptr++; 
+								}
+                else state = ANSI_STATE_OSC_STR;
+                break;
+            case ANSI_STATE_OSC_STR:
+                if (*r_ptr == '\x1b' && r_ptr < end && *r_ptr == '\\') {
+									state = ANSI_STATE_NORMAL; r_ptr++; 
+								}
+                break;
+        }
+				r_ptr++;
+    }
+    sb->len = w_ptr - sb->buf; *w_ptr = '\0';
+}
