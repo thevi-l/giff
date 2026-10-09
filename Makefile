@@ -1,12 +1,12 @@
 CC=gcc
-CFLAGS=-Wall -std=c99 
+CFLAGS=-Wall
 LDFLAGS=
 EXEC=giff
 SRC= giff.c strbuf.c strlist.c
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
-	@git diff | ./giff
+# 	@git diff | ./giff
 
 debug: CFLAGS+=-g
 debug: $(EXEC)
