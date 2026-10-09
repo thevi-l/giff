@@ -26,6 +26,7 @@
     ((line)[0] == (ch) && !((line)[1] == (ch) && (line)[2] == (ch)))
 
 int getTermWidth() {
+	// return 80;
 	static int width=0;
 	if(!width){
 		int fd=open("/dev/tty", O_RDONLY);
@@ -46,42 +47,44 @@ b8 parseHunkHeader(const char *string, int *lc_old, int *lc_new) {
 // 	return string;
 // }
 
-void printHunkHeader(const strbuf *sb){
+void printHunkHeader(const strbuf *sb, FILE *output){
 	strbuf out; strbuf_init(&out,0);
 	strbuf_addstr(&out, GRAY_FRONT); strbuf_addstr(&out, "┌──");
 	strbuf_addstr(&out, DEFAULT); strbuf_addstr(&out, sb->buf);
 	strbuf_addstr(&out, GRAY_FRONT);
-	for (size_t i = sb->len + 3; i < getTermWidth() - 1; i++) strbuf_addstr(&out, "─");
+	for (int i = sb->len + 3; i < getTermWidth() - 1; i++) strbuf_addstr(&out, "─");
 	strbuf_addstr(&out, "┐");strbuf_addstr(&out, DEFAULT);
-	printf("%s\n", out.buf);
+	fprintf(output, "%s\n", out.buf);
 	strbuf_release(&out);
 }
 
-void printEndHunk(){
+void printEndHunk(FILE *output){
 	strbuf out; strbuf_init(&out,0);
 	strbuf_addstr(&out, GRAY_FRONT);
 	strbuf_addstr(&out, "└");
-	for (size_t i = 1; i < getTermWidth() - 1; i++) strbuf_addstr(&out, "─");
+	for (int i = 1; i < getTermWidth() - 1; i++) strbuf_addstr(&out, "─");
 	strbuf_addstr(&out, "┘");strbuf_addstr(&out, DEFAULT);
-	printf("%s\n\n", out.buf);
+	fprintf(output, "%s\n\n", out.buf);
 	strbuf_release(&out);
 }
 
 // TODO
-void flushHunk(strlist *add, strlist *rm, int *lc_old, int *lc_new)
+void flushHunk(strlist *add, strlist *rm, int *lc_old, int *lc_new, FILE *output)
 {
 		int width = getTermWidth();
     for (size_t i = 0; i < rm->len; i++) {
-        printf(GRAY_FRONT"│"RED_BG"%3d %3c| "WHITE_FRONT"%-*s"DEFAULT GRAY_FRONT"│"DEFAULT"\n",
+        fprintf(output, GRAY_FRONT"│"RED_BG"%3d %3c| "WHITE_FRONT"%-*s"DEFAULT GRAY_FRONT"│"DEFAULT"\n",
             (*lc_old)++, ' ', width-11, rm->buf[i] + 1);
     }
     for (size_t i = 0; i < add->len; i++) {
-        printf(GRAY_FRONT"│"GREEN_BG"%3c %3d| "WHITE_FRONT"%-*s"DEFAULT GRAY_FRONT"│"DEFAULT"\n",
+        fprintf(output, GRAY_FRONT"│"GREEN_BG"%3c %3d| "WHITE_FRONT"%-*s"DEFAULT GRAY_FRONT"│"DEFAULT"\n",
             ' ', (*lc_new)++, width-11, add->buf[i] + 1);
     }
     strlist_clear(add); strlist_clear(rm);
 }
 int main(void) {
+		FILE *out = isatty(fileno(stdout)) ? popen("less -R", "w") : stdout;
+		if(!out) out = stdout;
     int lc_old = -1, lc_new = 1;
     strbuf linebuf; strbuf_init(&linebuf, 0);
 		strlist add, rm; strlist_init(&add); strlist_init(&rm);
@@ -93,34 +96,35 @@ int main(void) {
 					strlist_append(&add, linebuf.buf);
         }
         else if (IS_DIFF_LINE(linebuf.buf, '-')) {
-					if(add.len > 0) flushHunk(&add, &rm, &lc_old, &lc_new);
+					if(add.len > 0) flushHunk(&add, &rm, &lc_old, &lc_new, out);
 					strlist_append(&rm, linebuf.buf);
         } 
         else {
-					if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new);
+					if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new, out);
 					if (starts_with(linebuf.buf, "diff")){
 						if(lc_old!=-1){
-							printEndHunk(); lc_old = -1;
+							printEndHunk(out); lc_old = -1;
 						}
-						printf(BLUE_BG"%-*s"DEFAULT,getTermWidth(), linebuf.buf);
+						fprintf(out,BLUE_BG"%-*s"DEFAULT,getTermWidth(), linebuf.buf);
 					}
 					if (starts_with(linebuf.buf, "@@ -")) {
 							if(lc_old!=-1){
-								printEndHunk(); lc_old = -1;
+								printEndHunk(out); lc_old = -1;
 							}
 							parseHunkHeader(linebuf.buf, &lc_old, &lc_new);
-							printHunkHeader(&linebuf);
+							printHunkHeader(&linebuf, out);
 							continue;
 					}
 					else if (linebuf.buf[0] == ' ') {
-							printf(GRAY_FRONT "│%3d %3d|"DEFAULT " %-*s" GRAY_FRONT"│"DEFAULT"\n",
+							fprintf(out, GRAY_FRONT "│%3d %3d|"DEFAULT " %-*s" GRAY_FRONT"│"DEFAULT"\n",
 									lc_old++, lc_new++, (getTermWidth()-11), linebuf.buf + 1);
 					} 
         }
 	}
-		if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new);
-		if(lc_old!=-1)printEndHunk();
+		if (add.len > 0 || rm.len >0)flushHunk(&add, &rm, &lc_old, &lc_new, out);
+		if(lc_old!=-1)printEndHunk(out);
+		if(out!=stdout)pclose(out);
     strbuf_release(&linebuf);
-		strlist_clear(&add); strlist_clear(&rm);
+		strlist_release(&add); strlist_release(&rm);
     return 0;
 }
