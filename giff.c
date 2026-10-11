@@ -1,4 +1,3 @@
-#include <asm-generic/ioctls.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
@@ -83,7 +82,7 @@ void flushHunk(strlist *add, strlist *rm, int *lc_old, int *lc_new, FILE *output
     strlist_clear(add); strlist_clear(rm);
 }
 int main(void) {
-		FILE *out = isatty(fileno(stdout)) ? popen("less -+X -+F", "w") : stdout;
+		FILE *out = isatty(fileno(stdout)) ? popen("less -R -+X -+F", "w") : stdout;
 		if(!out) out = stdout;
     int lc_old = -1, lc_new = 1;
     strbuf linebuf; strbuf_init(&linebuf, 0);
