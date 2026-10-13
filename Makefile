@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-Wall
 LDFLAGS=
 EXEC=giff
-SRC= giff.c strbuf.c strlist.c
+SRC= $(addprefix src/, giff.c strlist.c strbuf.c)
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
